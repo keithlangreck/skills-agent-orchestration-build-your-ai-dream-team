@@ -1,0 +1,545 @@
+/* ==========================================================================
+   Project Pulse — Stylesheet
+   --------------------------------------------------------------------------
+   Frozen CSS Hook Contract & Class Map:
+   - Layout & Containers:
+     • .app-container / body   : Main page wrapper, typography, and theme tokens
+     • .dashboard__header      : Header area with title, subtitle, and meta count
+     • .dashboard__title       : Primary dashboard title (h1)
+     • .dashboard__subtitle    : Subheading description
+     • .dashboard__count       : Badge / pill displaying total active projects
+     • .dashboard              : Responsive CSS Grid container for project cards
+     • .dashboard__empty       : State displayed when 0 projects are present
+     • .dashboard__error       : State displayed when project data fails to load
+
+   - Project Card Anatomy:
+     • .project-card           : Individual card container (<article>)
+     • .project-card__top      : Top bar inside card (status badge & priority pill)
+     • .project-card__name     : Project title heading
+     • .project-card__owner    : Owner display name / team info
+     • .project-card__activity : Recent activity snippet
+     • .project-card__meta     : Footer meta area (last-updated date)
+
+   - Status Badges:
+     • .status-badge           : Base badge element
+     • .status-badge--on-track : "On Track" (Green / Positive)
+     • .status-badge--at-risk  : "At Risk" (Amber / Warning)
+     • .status-badge--delayed  : "Delayed" (Red / Danger)
+     • .status-badge--unknown  : Neutral fallback
+
+   - Priority Accents & Pills:
+     • .priority               : Base priority pill/label
+     • .priority--high         : High priority accent
+     • .priority--medium       : Medium priority accent
+     • .priority--low          : Low priority accent
+
+   - Accessibility & Utilities:
+     • .visually-hidden        : Off-screen utility for screen reader labels
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Design Tokens & CSS Custom Properties
+   -------------------------------------------------------------------------- */
+:root {
+  /* Color Palette - Neutrals */
+  --color-bg-app: #f8fafc;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-subtle: #edf2f7;
+  --color-text-primary: #0f172a;     /* 15.6:1 contrast on white */
+  --color-text-secondary: #475569;   /* 5.8:1 contrast on white (WCAG AA pass) */
+  --color-text-muted: #64748b;       /* 4.5:1 contrast on white (WCAG AA pass) */
+
+  /* Color Palette - Status: On Track (Green) */
+  --status-on-track-bg: #dcfce7;
+  --status-on-track-text: #14532d;   /* 6.5:1 contrast on #dcfce7 */
+  --status-on-track-dot: #16a34a;
+  --status-on-track-border: #bbf7d0;
+
+  /* Color Palette - Status: At Risk (Amber) */
+  --status-at-risk-bg: #fef3c7;
+  --status-at-risk-text: #78350f;    /* 7.2:1 contrast on #fef3c7 */
+  --status-at-risk-dot: #d97706;
+  --status-at-risk-border: #fde68a;
+
+  /* Color Palette - Status: Delayed (Red) */
+  --status-delayed-bg: #fee2e2;
+  --status-delayed-text: #7f1d1d;    /* 7.4:1 contrast on #fee2e2 */
+  --status-delayed-dot: #dc2626;
+  --status-delayed-border: #fecaca;
+
+  /* Color Palette - Status: Unknown / Neutral Fallback */
+  --status-unknown-bg: #f1f5f9;
+  --status-unknown-text: #334155;    /* 7.8:1 contrast on #f1f5f9 */
+  --status-unknown-dot: #64748b;
+  --status-unknown-border: #cbd5e1;
+
+  /* Priority Tokens */
+  --priority-high-bg: #fef2f2;
+  --priority-high-text: #991b1b;     /* 6.8:1 contrast on #fef2f2 */
+  --priority-high-border: #fecaca;
+  --priority-high-bar: #ef4444;
+
+  --priority-medium-bg: #fffbeb;
+  --priority-medium-text: #854d0e;   /* 5.2:1 contrast on #fffbeb */
+  --priority-medium-border: #fde68a;
+  --priority-medium-bar: #f59e0b;
+
+  --priority-low-bg: #eff6ff;
+  --priority-low-text: #1e40af;      /* 6.9:1 contrast on #eff6ff */
+  --priority-low-border: #bfdbfe;
+  --priority-low-bar: #3b82f6;
+
+  /* Typography Scale */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.75rem;   /* 28px */
+  --font-size-3xl: 2.25rem;   /* 36px */
+
+  /* Elevation & Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.08);
+  --shadow-card-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Reset & Base Styles
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 2rem 1.25rem 4rem;
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   Accessibility Utilities
+   -------------------------------------------------------------------------- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Page Layout & Header
+   -------------------------------------------------------------------------- */
+.app-container,
+.dashboard-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.dashboard__header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dashboard__title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dashboard__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+}
+
+.dashboard__count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.dashboard__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 65ch;
+}
+
+/* --------------------------------------------------------------------------
+   Dashboard Grid Container
+   -------------------------------------------------------------------------- */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Project Card
+   -------------------------------------------------------------------------- */
+.project-card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 1.375rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: #cbd5e1;
+}
+
+/* Priority Left Accent Strip */
+.project-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--color-border);
+  transition: background-color var(--transition-fast);
+}
+
+.project-card.project-card--priority-high::before,
+.project-card:has(.priority--high)::before {
+  background-color: var(--priority-high-bar);
+}
+
+.project-card.project-card--priority-medium::before,
+.project-card:has(.priority--medium)::before {
+  background-color: var(--priority-medium-bar);
+}
+
+.project-card.project-card--priority-low::before,
+.project-card:has(.priority--low)::before {
+  background-color: var(--priority-low-bar);
+}
+
+/* Card Header: Badges & Priority */
+.project-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+/* Card Title */
+.project-card__name {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+  margin-bottom: 0.35rem;
+  overflow-wrap: anywhere;
+}
+
+/* Owner */
+.project-card__owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 1rem;
+}
+
+.project-card__owner::before {
+  content: "👤";
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+/* Activity Section */
+.project-card__activity {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-subtle);
+  border-left: 3px solid var(--color-border);
+  padding: 0.65rem 0.8rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+}
+
+/* Card Meta / Footer */
+.project-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.project-card__last-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* --------------------------------------------------------------------------
+   Status Badges
+   -------------------------------------------------------------------------- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.status-badge::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* On Track */
+.status-badge--on-track {
+  background-color: var(--status-on-track-bg);
+  color: var(--status-on-track-text);
+  border-color: var(--status-on-track-border);
+}
+
+.status-badge--on-track::before {
+  background-color: var(--status-on-track-dot);
+}
+
+/* At Risk */
+.status-badge--at-risk {
+  background-color: var(--status-at-risk-bg);
+  color: var(--status-at-risk-text);
+  border-color: var(--status-at-risk-border);
+}
+
+.status-badge--at-risk::before {
+  background-color: var(--status-at-risk-dot);
+}
+
+/* Delayed */
+.status-badge--delayed {
+  background-color: var(--status-delayed-bg);
+  color: var(--status-delayed-text);
+  border-color: var(--status-delayed-border);
+}
+
+.status-badge--delayed::before {
+  background-color: var(--status-delayed-dot);
+}
+
+/* Unknown / Fallback */
+.status-badge--unknown {
+  background-color: var(--status-unknown-bg);
+  color: var(--status-unknown-text);
+  border-color: var(--status-unknown-border);
+}
+
+.status-badge--unknown::before {
+  background-color: var(--status-unknown-dot);
+}
+
+/* --------------------------------------------------------------------------
+   Priority Badges / Pills
+   -------------------------------------------------------------------------- */
+.priority {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.priority--high {
+  background-color: var(--priority-high-bg);
+  color: var(--priority-high-text);
+  border-color: var(--priority-high-border);
+}
+
+.priority--medium {
+  background-color: var(--priority-medium-bg);
+  color: var(--priority-medium-text);
+  border-color: var(--priority-medium-border);
+}
+
+.priority--low {
+  background-color: var(--priority-low-bg);
+  color: var(--priority-low-text);
+  border-color: var(--priority-low-border);
+}
+
+/* --------------------------------------------------------------------------
+   Empty & Error States
+   -------------------------------------------------------------------------- */
+.dashboard__empty,
+.dashboard__error {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  background-color: var(--color-bg-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.dashboard__empty-icon,
+.dashboard__error-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard__empty-title,
+.dashboard__error-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dashboard__empty-description,
+.dashboard__error-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 44ch;
+}
+
+.dashboard__error {
+  border-color: var(--priority-high-border);
+  background-color: var(--priority-high-bg);
+}
+
+.dashboard__error-title {
+  color: var(--priority-high-text);
+}
+
+/* Utility to hide inactive state containers if manipulated via [hidden] */
+[hidden] {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Layout & Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  body {
+    padding: 1.25rem 1rem 2.5rem;
+  }
+
+  .dashboard__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .project-card {
+    padding: 1.125rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced Motion Preferences
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .project-card:hover {
+    transform: none;
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "projects": [
+    {
+      "id": "atlas-redesign",
+      "name": "Atlas Redesign",
+      "owner": "Priya Nair",
+      "status": "On Track",
+      "priority": "High",
+      "recentActivity": "Completed the new navigation IA and shipped the updated homepage wireframes for review.",
+      "lastUpdated": "2026-08-30"
+    },
+    {
+      "id": "billing-migration",
+      "name": "Billing Migration",
+      "owner": "Marcus Chen",
+      "status": "At Risk",
+      "priority": "High",
+      "recentActivity": "Vendor API rate limits are slowing the data backfill; escalation meeting scheduled for Thursday.",
+      "lastUpdated": "2026-08-29"
+    },
+    {
+      "id": "mobile-offline-mode",
+      "name": "Mobile Offline Mode",
+      "owner": "Sofia Alvarez",
+      "status": "Delayed",
+      "priority": "Medium",
+      "recentActivity": "Sync conflict resolution logic needs a redesign after QA found data loss edge cases.",
+      "lastUpdated": "2026-08-25"
+    },
+    {
+      "id": "internal-search",
+      "name": "Internal Search Revamp",
+      "owner": "Devon Brooks",
+      "status": "On Track",
+      "priority": "Medium",
+      "recentActivity": "Indexing pipeline passed load testing; rolling out to 10% of internal users this week.",
+      "lastUpdated": "2026-08-31"
+    },
+    {
+      "id": "onboarding-flow",
+      "name": "Onboarding Flow Simplification",
+      "owner": "Aisha Rahman",
+      "status": "On Track",
+      "priority": "Low",
+      "recentActivity": "Reduced signup steps from 6 to 3 based on usability testing feedback.",
+      "lastUpdated": "2026-08-28"
+    },
+    {
+      "id": "analytics-pipeline",
+      "name": "Analytics Pipeline Hardening",
+      "owner": "Marcus Chen",
+      "status": "At Risk",
+      "priority": "Medium",
+      "recentActivity": "Intermittent data gaps traced to a race condition in the ingestion service; fix in progress.",
+      "lastUpdated": "2026-08-27"
+    },
+    {
+      "id": "design-system-v2",
+      "name": "Design System v2",
+      "owner": "Priya Nair",
+      "status": "Delayed",
+      "priority": "Low",
+      "recentActivity": "Paused to prioritize Atlas Redesign; resuming component audit next sprint.",
+      "lastUpdated": "2026-08-20"
+    }
+  ]
+}

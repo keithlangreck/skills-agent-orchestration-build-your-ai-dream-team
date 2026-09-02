@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Pulse</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="dashboard__header">
+      <div class="dashboard__header-top">
+        <div class="dashboard__title-group">
+          <h1 class="dashboard__title">Project Pulse</h1>
+          <span class="dashboard__count" id="project-count" aria-live="polite">0 projects</span>
+        </div>
+      </div>
+      <p class="dashboard__subtitle">
+        A live snapshot of project status, priority, and recent activity across the team.
+      </p>
+    </header>
+
+    <main class="dashboard" id="dashboard" aria-live="polite">
+      <!-- Project cards are rendered here by script.js -->
+    </main>
+
+    <div class="dashboard__empty" id="dashboard-empty" hidden>
+      <div class="dashboard__empty-icon" aria-hidden="true">📭</div>
+      <p class="dashboard__empty-title">No projects yet</p>
+      <p class="dashboard__empty-description">
+        There are no projects to display right now. Check back soon.
+      </p>
+    </div>
+
+    <div class="dashboard__error" id="dashboard-error" hidden>
+      <div class="dashboard__error-icon" aria-hidden="true">⚠️</div>
+      <p class="dashboard__error-title">Unable to load project data</p>
+      <p class="dashboard__error-description" id="dashboard-error-message">
+        Something went wrong while loading <code>project-data.json</code>.
+      </p>
+    </div>
+  </div>
+
+  <script defer>
+    const STATUS_MODIFIERS = {
+      "On Track": "on-track",
+      "At Risk": "at-risk",
+      "Delayed": "delayed",
+    };
+
+    const PRIORITY_MODIFIERS = {
+      High: "high",
+      Medium: "medium",
+      Low: "low",
+    };
+
+    function slugify(value) {
+      return String(value)
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+    }
+
+    function formatDate(isoDate) {
+      if (!isoDate) return "—";
+      const date = new Date(isoDate);
+      if (Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
+    }
+
+    function createProjectCard(project) {
+      const { id, name, owner, status, priority, recentActivity, lastUpdated } = project;
+
+      if (!name || !owner || !status || !priority) {
+        console.warn(`Skipping project with missing required fields: ${id || "(no id)"}`);
+        return null;
+      }
+
+      const statusModifier = STATUS_MODIFIERS[status] || slugify(status) || "unknown";
+      const priorityModifier = PRIORITY_MODIFIERS[priority] || slugify(priority) || "unknown";
+      const nameId = `project-name-${id || slugify(name)}`;
+
+      const card = document.createElement("article");
+      card.className = "project-card";
+      card.setAttribute("aria-labelledby", nameId);
+
+      card.innerHTML = `
+        <div class="project-card__top">
+          <span class="status-badge status-badge--${statusModifier}">
+            <span class="visually-hidden">Status:</span>${status}
+          </span>
+          <span class="priority priority--${priorityModifier}">
+            <span class="visually-hidden">Priority:</span>${priority}
+          </span>
+        </div>
+        <h2 class="project-card__name" id="${nameId}">${name}</h2>
+        <p class="project-card__owner">${owner}</p>
+        <p class="project-card__activity">${recentActivity || "No recent activity reported."}</p>
+        <div class="project-card__meta">
+          <span class="project-card__last-updated">Updated ${formatDate(lastUpdated)}</span>
+        </div>
+      `;
+
+      return card;
+    }
+
+    async function loadProjects() {
+      const dashboard = document.getElementById("dashboard");
+      const emptyState = document.getElementById("dashboard-empty");
+      const errorState = document.getElementById("dashboard-error");
+      const errorMessage = document.getElementById("dashboard-error-message");
+      const countBadge = document.getElementById("project-count");
+
+      try {
+        const response = await fetch("./project-data.json", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        const projects = Array.isArray(data.projects) ? data.projects : [];
+
+        if (projects.length === 0) {
+          emptyState.hidden = false;
+          countBadge.textContent = "0 projects";
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        let renderedCount = 0;
+
+        for (const project of projects) {
+          const card = createProjectCard(project);
+          if (card) {
+            fragment.appendChild(card);
+            renderedCount += 1;
+          }
+        }
+
+        dashboard.appendChild(fragment);
+        countBadge.textContent = `${renderedCount} project${renderedCount === 1 ? "" : "s"}`;
+
+        if (renderedCount === 0) {
+          emptyState.hidden = false;
+        }
+      } catch (error) {
+        console.error("Failed to load project data:", error);
+        errorMessage.textContent = `Something went wrong while loading project-data.json: ${error.message}`;
+        errorState.hidden = false;
+      }
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>
